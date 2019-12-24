@@ -3,10 +3,11 @@
   remote_user: root
   
   tasks:
-    - name: Install yum packages 
+    - name: Update the system
       become: true
       yum:
-        update_cache: yes
+        name: "*"
+        state: latest
 
     - name: Install Docker Amazon Linux 2
       become: true
@@ -24,3 +25,4 @@
       user:
         name: ec2-user
         groups: docker
+        append: yes

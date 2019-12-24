@@ -1,6 +1,42 @@
 # ops
 Terraform and Ansible stuff for provisioning/deploying infrastructure for my personal projects
 
+## Building
+First, create the AMI with Packer. Note that you will need to pass in your AWS
+keys, one of the best solutions is [aws-vault](https://github.com/99designs/aws-vault).
+
+Once configured, you can run:
+
+```bash
+aws-vault exec home -- packer build build.json
+```
+
+This will create a temporary EC2 instance called `Packer Builder` which will
+compile your AMI. Once it is finished, you'll be able to see your AMI in the
+EC2 console.
+
+
+It is also good practice to run:
+
+```
+packer validate
+```
+
+Which will early detect any errors in your build.
+
+Next, to provision resources (that use the AMI we just created):
+
+```bash
+aws-vault exec home -- terraform apply
+```
+
+But, like Packer, you can also utilize:
+
+```
+terraform validate
+```
+
+
 ## Overview
 
 ### Packer 
