@@ -8,15 +8,6 @@ terraform {
 }
 
 resource "libvirt_volume" "debian_bullseye" {
-  name   = "debian"
-  source = "./build/debian-45fe9f10-b000-490c-ae1a-9f9d29781e06.qcow2"
-}
-
-resource "libvirt_domain" "debian_bullseye" {
-  name     = "debian"
-  memory = "2048"
-
-  disk {
-    volume_id = libvirt_volume.debian_bullseye.id
-  }
+  name   = "debian_bullseye"
+  source = "./build/bullseye-329d9762-52c1-40ac-b0fd-2f6b9898695d.qcow2"
 }

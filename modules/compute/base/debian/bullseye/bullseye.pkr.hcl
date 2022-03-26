@@ -1,4 +1,8 @@
 # Based on https://github.com/tylert/packer-build/blob/master/source/debian/11_bullseye/base.pkr.hcl
+#
+packer {
+  required_version = ">= 1.7.0"
+}
 
 variable "boot_wait" {
   type    = string
@@ -218,7 +222,7 @@ variable "version" {
 
 variable "vm_name" {
   type    = string
-  default = "base-bullseye"
+  default = "bullseye"
 }
 
 variable "vnc_vrdp_bind_address" {
@@ -236,12 +240,13 @@ variable "vnc_vrdp_port_min" {
   default = "5900"
 }
 
-# The "legacy_isotime" function has been provided for backwards compatability,
-# but we recommend switching to the timestamp and formatdate functions.
+variable "output_directory" {
+  type = string
+  default = "build"
+}
 
 locals {
-  output_directory = "build/"
-  image_name = "${var.vm_name}-${uuidv4()}"
+  image_name = "${var.vm_name}-${uuidv4()}.qcow2"
 }
 
 source "qemu" "qemu" {
@@ -266,7 +271,7 @@ source "qemu" "qemu" {
   disk_image           = false
   disk_interface       = "virtio-scsi"
   disk_size            = var.disk_size
-  format               = "raw"
+  format               = "qcow2"
   headless             = var.headless
   host_port_max        = var.host_port_max
   host_port_min        = var.host_port_min
@@ -281,7 +286,7 @@ source "qemu" "qemu" {
   machine_type                 = "pc"
   memory                       = var.memory
   net_device                   = "virtio-net"
-  output_directory             = local.output_directory
+  output_directory             = var.output_directory
   qemu_binary                  = var.qemu_binary
   shutdown_command             = "echo '${var.ssh_password}' | sudo -E -S poweroff"
   shutdown_timeout             = var.shutdown_timeout
@@ -299,7 +304,7 @@ source "qemu" "qemu" {
   ssh_timeout                  = var.ssh_timeout
   ssh_username                 = var.ssh_username
   use_default_display          = false
-  vm_name                      = var.vm_name
+  vm_name                      = local.image_name
   vnc_bind_address             = var.vnc_vrdp_bind_address
   vnc_port_max                 = var.vnc_vrdp_port_max
   vnc_port_min                 = var.vnc_vrdp_port_min

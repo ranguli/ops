@@ -16,18 +16,12 @@ as it can run:
 
 ```
 export LIBVIRT_DEFAULT_URI="qemu+ssh://gentoo@192.168.2.24/system"
-export MINIO_ENDPOINT="http://myendpoint"
-export MINIO_ACCESS_KEY="1234"
-export MINIO_SECRET_KEY="1234"
 terraform plan
 terraform apply
 ```
 
+## Setup
 
-### MinIO Client Installation
-
-
-
-```
-mc alias set minio http://server:9000 access_key secret_key
-```
+```bash
+terraform init
+````
