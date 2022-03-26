@@ -9,5 +9,5 @@ terraform {
 
 resource "libvirt_volume" "debian_bullseye" {
   name   = "debian_bullseye"
-  source = "./build/bullseye-329d9762-52c1-40ac-b0fd-2f6b9898695d.qcow2"
+  source = "https://cloud.debian.org/images/cloud/bullseye/20220310-944/debian-11-genericcloud-amd64-20220310-944.qcow2"
 }
