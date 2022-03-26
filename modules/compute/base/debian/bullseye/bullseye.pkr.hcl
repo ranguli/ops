@@ -1,14 +1,5 @@
 # Based on https://github.com/tylert/packer-build/blob/master/source/debian/11_bullseye/base.pkr.hcl
 
-packer {
-  required_version = "~> 1.8.0"
-}
-
-variable "apt_cache_url" {
-  type    = string
-  default = "http://myserver:3142"
-}
-
 variable "boot_wait" {
   type    = string
   default = "3s"
@@ -95,11 +86,6 @@ variable "iso_path_external" {
   default = "http://cdimage.debian.org/cdimage/release/current/amd64/iso-cd"
 }
 
-variable "iso_path_internal" {
-  type    = string
-  default = "http://myserver:8080/debian"
-}
-
 variable "keep_registered" {
   type    = string
   default = "false"
@@ -125,24 +111,14 @@ variable "memory" {
   default = "1024"
 }
 
-variable "min_vagrant_version" {
-  type    = string
-  default = "2.2.19"
-}
-
 variable "mirror" {
   type    = string
   default = "ftp.ca.debian.org"
 }
 
-variable "packer_cache_dir" {
-  type    = string
-  default = "${env("PACKER_CACHE_DIR")}"
-}
-
 variable "preseed_file" {
   type    = string
-  default = "template/debian/11_bullseye/base.preseed"
+  default = "preseed.cfg"
 }
 
 variable "qemu_binary" {
@@ -235,11 +211,6 @@ variable "timezone" {
   default = "UTC"
 }
 
-variable "vagrantfile_template" {
-  type    = string
-  default = "template/debian/11_bullseye/vagrant.rb.j2"
-}
-
 variable "version" {
   type    = string
   default = "0.0.0"
@@ -269,7 +240,8 @@ variable "vnc_vrdp_port_min" {
 # but we recommend switching to the timestamp and formatdate functions.
 
 locals {
-  output_directory = "build/${legacy_isotime("2006-01-02-15-04-05")}"
+  output_directory = "build/"
+  image_name = "${var.vm_name}-${uuidv4()}"
 }
 
 source "qemu" "qemu" {
@@ -302,13 +274,10 @@ source "qemu" "qemu" {
   http_port_max        = var.http_port_max
   http_port_min        = var.http_port_min
   iso_checksum         = var.iso_checksum
-  iso_skip_cache       = false
-  iso_target_extension = "iso"
-  iso_target_path      = "${var.packer_cache_dir}/${var.iso_file}"
-  iso_urls = [
-    "${var.iso_path_internal}/${var.iso_file}",
-    "${var.iso_path_external}/${var.iso_file}"
-  ]
+  iso_skip_cache               = false
+  iso_target_extension         = "iso"
+  iso_target_path              = "${var.iso_file}"
+  iso_urls                     = ["${var.iso_path_external}/${var.iso_file}"]
   machine_type                 = "pc"
   memory                       = var.memory
   net_device                   = "virtio-net"
@@ -336,77 +305,10 @@ source "qemu" "qemu" {
   vnc_port_min                 = var.vnc_vrdp_port_min
 }
 
-source "virtualbox-iso" "vbox" {
-  boot_command = [
-    "<wait><wait><wait><esc><wait><wait><wait>",
-    "/install.amd/vmlinuz ",
-    "initrd=/install.amd/initrd.gz ",
-    "auto=true ",
-    "url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/${var.preseed_file} ",
-    "hostname=${var.vm_name} ",
-    "domain=${var.domain} ",
-    "interface=auto ",
-    "vga=788 noprompt quiet --<enter>"
-  ]
-  boot_wait                = var.boot_wait
-  bundle_iso               = var.bundle_iso
-  communicator             = var.communicator
-  cpus                     = var.cpus
-  disk_size                = var.disk_size
-  format                   = "ova"
-  guest_additions_mode     = "disable"
-  guest_os_type            = var.guest_os_type
-  hard_drive_discard       = false
-  hard_drive_interface     = "sata"
-  hard_drive_nonrotational = false
-  headless                 = var.headless
-  host_port_max            = var.host_port_max
-  host_port_min            = var.host_port_min
-  http_content             = { "/preseed.cfg" = templatefile(var.preseed_file, { var = var }) }
-  http_port_max            = var.http_port_max
-  http_port_min            = var.http_port_min
-  iso_checksum             = var.iso_checksum
-  iso_interface            = "sata"
-  iso_target_extension     = "iso"
-  iso_target_path          = "${var.packer_cache_dir}/${var.iso_file}"
-  iso_urls = [
-    "${var.iso_path_internal}/${var.iso_file}",
-    "${var.iso_path_external}/${var.iso_file}"
-  ]
-  keep_registered              = var.keep_registered
-  memory                       = var.memory
-  output_directory             = local.output_directory
-  post_shutdown_delay          = "0s"
-  sata_port_count              = "1"
-  shutdown_command             = "echo '${var.ssh_password}' | sudo -E -S poweroff"
-  shutdown_timeout             = var.shutdown_timeout
-  skip_export                  = var.skip_export
-  skip_nat_mapping             = false
-  ssh_agent_auth               = var.ssh_agent_auth
-  ssh_clear_authorized_keys    = var.ssh_clear_authorized_keys
-  ssh_disable_agent_forwarding = var.ssh_disable_agent_forwarding
-  ssh_file_transfer_method     = var.ssh_file_transfer_method
-  ssh_handshake_attempts       = var.ssh_handshake_attempts
-  ssh_keep_alive_interval      = var.ssh_keep_alive_interval
-  ssh_password                 = var.ssh_password
-  ssh_port                     = var.ssh_port
-  ssh_pty                      = var.ssh_pty
-  ssh_timeout                  = var.ssh_timeout
-  ssh_username                 = var.ssh_username
-  vboxmanage = [
-    ["modifyvm", "{{ .Name }}", "--rtcuseutc", "off"]
-  ]
-  virtualbox_version_file = "/tmp/.vbox_version"
-  vm_name                 = var.vm_name
-  vrdp_bind_address       = var.vnc_vrdp_bind_address
-  vrdp_port_max           = var.vnc_vrdp_port_max
-  vrdp_port_min           = var.vnc_vrdp_port_min
-}
-
 build {
   description = "Can't use variables here yet!"
 
-  sources = ["source.qemu.qemu", "source.virtualbox-iso.vbox"]
+  sources = ["source.qemu.qemu"]
 
   provisioner "shell" {
     binary              = false
@@ -414,7 +316,7 @@ build {
     expect_disconnect   = true
     inline              = ["echo '${var.ssh_username} ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99${var.ssh_username}", "chmod 0440 /etc/sudoers.d/99${var.ssh_username}"]
     inline_shebang      = "/bin/sh -e"
-    only                = ["qemu", "vbox"]
+    only                = ["qemu"]
     skip_clean          = false
     start_retry_timeout = var.start_retry_timeout
   }
@@ -425,7 +327,7 @@ build {
     expect_disconnect   = true
     inline              = ["apt-get update", "apt-get --yes dist-upgrade", "apt-get clean"]
     inline_shebang      = "/bin/sh -e"
-    only                = ["qemu", "vbox"]
+    only                = ["qemu"]
     skip_clean          = false
     start_retry_timeout = var.start_retry_timeout
   }
@@ -436,24 +338,8 @@ build {
     expect_disconnect   = true
     inline              = ["dd if=/dev/zero of=/ZEROFILL bs=16M || true", "rm /ZEROFILL", "sync"]
     inline_shebang      = "/bin/sh -e"
-    only                = ["qemu", "vbox"]
+    only                = ["qemu"]
     skip_clean          = false
     start_retry_timeout = var.start_retry_timeout
-  }
-
-  post-processor "vagrant" {
-    compression_level    = 6
-    keep_input_artifact  = true
-    only                 = ["qemu", "vbox"]
-    output               = "${local.output_directory}/${var.vm_name}-${var.version}-${build.name}.box"
-    vagrantfile_template = var.vagrantfile_template
-  }
-
-  post-processor "compress" {
-    compression_level   = 6
-    format              = ".gz"
-    keep_input_artifact = true
-    only                = ["qemu"]
-    output              = "${local.output_directory}/${var.vm_name}.raw.gz"
   }
 }
