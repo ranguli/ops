@@ -33,4 +33,8 @@ resource "libvirt_domain" "harbor" {
   disk {
     volume_id = libvirt_volume.harbor.id
   }
+
+  network_interface {
+    network_name = "default"
+  }
 }
